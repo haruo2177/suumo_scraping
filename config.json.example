@@ -1,0 +1,20 @@
+{
+    "result_url": "<中古マンション購入の検索結果1ページ目のURL>",
+    "data": "property.csv",
+    "header": [
+        "id",
+        "name",
+        "url",
+        "price",
+        "location",
+        "station",
+        "area",
+        "floor plan",
+        "balcony",
+        "data of construction",
+        "company"
+    ],
+    "suumo_url": "https://suumo.jp",
+    "line_notify_token": "<YOUR ACCESS TOKEN>",
+    "line_notify_api": "https://notify-api.line.me/api/notify"
+}
