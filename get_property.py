@@ -7,6 +7,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+
 # configファイルを読み込む
 json_file = open('config.json', 'r')
 config = json.load(json_file)
@@ -120,17 +121,27 @@ if __name__ == '__main__':
     if added_properties == set():
         print('[INFO] NOT addedd from last time.')
     else:
-        print('[INFO] addedd from last time and notify to LINE.')
+        print('[INFO] addedd from last time.')
         print(added_properties)
         if line_notify:
-            send_line_notify('次の物件が追加されました\r\n' + repr(added_properties))
+            message = ''
+            for added_property in added_properties:
+                message += df_new.query('id == @added_property')['url'].values[0] + '\r\n'
+            send_line_notify('次の物件が追加されました\r\n' + message)
+            print('[INFO] send LINE Notify.')
+            print(message)
 
     # 削除物件
     reduced_properties = set(list_old) - set(list_new)
     if reduced_properties == set():
         print('[INFO] NOT reduced from last time.')
     else:
-        print('[INFO] reduced from last time and notify to LINE.')
+        print('[INFO] reduced from last time.')
         print(reduced_properties)
+        message = ''
         if line_notify:
-            send_line_notify('次の物件が削除されました\r\n' + repr(reduced_properties))
+            for reduced_property in reduced_properties:
+                message += str(df_old.query('id == @reduced_property').loc[:, ['name', 'price', 'location']].values[0]) + '\r\n'
+            send_line_notify('次の物件が削除されました\r\n' + message)
+            print('[INFO] send LINE Notify.')
+            print(message)
