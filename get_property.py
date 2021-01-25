@@ -62,7 +62,8 @@ def get_property_data(property_unit):
 
 if __name__ == '__main__':
     # ロギング設定
-    logging.basicConfig(filename='log', encoding='utf-8', level=logging.DEBUG)
+    fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+    logging.basicConfig(filename='log', encoding='utf-8', level=logging.DEBUG, format=fmt)
 
     # 物件情報ファイルを読み込む、無ければ作りLINE通知はしない
     line_notify = True
