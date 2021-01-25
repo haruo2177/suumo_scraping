@@ -1,6 +1,7 @@
-# config file
+# 追記
 config.json
 property.csv
+log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -2,6 +2,7 @@
 import json
 import os
 import csv
+import logging
 import pandas as pd
 
 import requests
@@ -28,7 +29,7 @@ def get_property_data(property_unit):
     """ 一覧ページから各物件のデータを取得する
 
     Args:
-        property_unit (string): [description]
+        property_unit (string): <div class='property_unit'>を抽出したテキスト
 
     Return:
         (list): 物件の各情報
@@ -60,39 +61,42 @@ def get_property_data(property_unit):
 
 
 if __name__ == '__main__':
+    # ロギング設定
+    logging.basicConfig(filename='log', encoding='utf-8', level=logging.DEBUG)
+
     # 物件情報ファイルを読み込む、無ければ作りLINE通知はしない
     line_notify = True
     if not os.path.exists(config['data']):
         line_notify = False
         with open(config['data'], 'w') as f:
-            print('make file: ' + config['data'])
+            logging.info('make file: ' + config['data'])
             writer = csv.writer(f)
             writer.writerow(config['header'])
     df_old = pd.read_csv(config['data'])
-    print('[INFO] read property data.')
-    print(len(df_old))
+    logging.info('read property data.')
+    logging.info(len(df_old))
 
-    # 検索結果ページのHTMLからbodyを抜き出す
+    # 検索結果ページのHTMLからbodyを抽出
     result = requests.get(config["result_url"])
     soup = BeautifulSoup(result.content, 'html5lib')
     body = soup.find('body')
-    # print(body)
+    # logging.info(body)
 
     # 検索結果のページ数を取得
     pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
     li = pagenation.find_all('li')[-1]
     page_num = int(li.find('a').text)
-    print('[INFO] get number of pages.')
-    print(page_num)
+    logging.info('get number of pages.')
+    logging.info(page_num)
 
-    # 1ページ目の物件データ収集してCSVに出力
+    # 1ページ目の物件データ収集
     propertyies = list()
     for property_unit in body.find_all('div', {'class': 'property_unit'}):
         propertyies.append(get_property_data(property_unit))
-    print('[INFO] get property information from p.1.')
-    print(len(propertyies))
+    logging.info('get property information from p.1.')
+    logging.info(len(propertyies))
 
-    # 2ページ名以降の各物件データ収集してCSVに出力
+    # 2ページ名以降の各物件データ収集
     for i in range(2, page_num + 1):
         url = config["result_url"] + '&pn=' + str(i)
         result = requests.get(url)
@@ -100,17 +104,17 @@ if __name__ == '__main__':
         body = soup.find('body')
         for property_unit in body.find_all('div', {'class': 'property_unit'}):
             propertyies.append(get_property_data(property_unit))
-        print('[INFO] get property information from p.{}.'.format(i))
-        print(len(propertyies))
+        logging.info('get property information from p.{}.'.format(i))
+        logging.info(len(propertyies))
 
-    # 取得した物件情報をデータフレームに変換
+    # 取得した物件情報をデータフレームに変換してCSVに出力
     df_new = pd.DataFrame(
         data=propertyies,
         columns=config['header']
     )
     df_new.to_csv(config['data'], index=False)
-    print('[INFO] save property data to csv.')
-    print(len(df_new))
+    logging.info('save property data to csv.')
+    logging.info(len(df_new))
 
     # 物件情報を確認して差分があればLINE通知
     if line_notify:
@@ -120,27 +124,27 @@ if __name__ == '__main__':
         # 追加物件
         added_properties = set(list_new) - set(list_old)
         if added_properties == set():
-            print('[INFO] NOT addedd from last time.')
+            logging.info('NOT addedd from last time.')
         else:
-            print('[INFO] addedd from last time.')
-            print(added_properties)
+            logging.info('addedd from last time.')
+            logging.info(added_properties)
             message = ''
             for added_property in added_properties:
                 message += df_new.query('id == @added_property')['url'].values[0] + '\r\n'
             send_line_notify('次の物件が追加されました\r\n' + message)
-            print('[INFO] send LINE Notify.')
-            print(message)
+            logging.info('send LINE Notify.')
+            logging.info(message)
 
         # 削除物件
         reduced_properties = set(list_old) - set(list_new)
         if reduced_properties == set():
-            print('[INFO] NOT reduced from last time.')
+            logging.info('NOT reduced from last time.')
         else:
-            print('[INFO] reduced from last time.')
-            print(reduced_properties)
+            logging.info('reduced from last time.')
+            logging.info(reduced_properties)
             message = ''
             for reduced_property in reduced_properties:
                 message += str(df_old.query('id == @reduced_property').loc[:, ['name', 'price', 'location']].values[0]) + '\r\n'
             send_line_notify('次の物件が削除されました\r\n' + message)
-            print('[INFO] send LINE Notify.')
-            print(message)
+            logging.info('send LINE Notify.')
+            logging.info(message)
