@@ -113,17 +113,17 @@ if __name__ == '__main__':
     print(len(df_new))
 
     # 物件情報を確認して差分があればLINE通知
-    list_old = df_old['id'].tolist()
-    list_new = df_new['id'].tolist()
+    if line_notify:
+        list_old = df_old['id'].tolist()
+        list_new = df_new['id'].tolist()
 
-    # 追加物件
-    added_properties = set(list_new) - set(list_old)
-    if added_properties == set():
-        print('[INFO] NOT addedd from last time.')
-    else:
-        print('[INFO] addedd from last time.')
-        print(added_properties)
-        if line_notify:
+        # 追加物件
+        added_properties = set(list_new) - set(list_old)
+        if added_properties == set():
+            print('[INFO] NOT addedd from last time.')
+        else:
+            print('[INFO] addedd from last time.')
+            print(added_properties)
             message = ''
             for added_property in added_properties:
                 message += df_new.query('id == @added_property')['url'].values[0] + '\r\n'
@@ -131,15 +131,14 @@ if __name__ == '__main__':
             print('[INFO] send LINE Notify.')
             print(message)
 
-    # 削除物件
-    reduced_properties = set(list_old) - set(list_new)
-    if reduced_properties == set():
-        print('[INFO] NOT reduced from last time.')
-    else:
-        print('[INFO] reduced from last time.')
-        print(reduced_properties)
-        message = ''
-        if line_notify:
+        # 削除物件
+        reduced_properties = set(list_old) - set(list_new)
+        if reduced_properties == set():
+            print('[INFO] NOT reduced from last time.')
+        else:
+            print('[INFO] reduced from last time.')
+            print(reduced_properties)
+            message = ''
             for reduced_property in reduced_properties:
                 message += str(df_old.query('id == @reduced_property').loc[:, ['name', 'price', 'location']].values[0]) + '\r\n'
             send_line_notify('次の物件が削除されました\r\n' + message)
