@@ -74,6 +74,7 @@ def setup_logger(name, logfile=config['log']):
     logger.setLevel(logging.DEBUG)
 
     # create file handler which logs even DEBUG messages
+    os.makedirs(os.path.dirname(config['log']), exist_ok=True)
     fh = logging.FileHandler(logfile)
     fh.setLevel(logging.DEBUG)
     fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
