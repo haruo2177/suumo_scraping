@@ -60,42 +60,72 @@ def get_property_data(property_unit):
     return [property_id, name, url, price, location, station, area, floor_plan, balcony, data_of_construction, company]
 
 
+def setup_logger(name, logfile=config['log']):
+    """loggerの初期設定を行う
+
+    Args:
+        name (string): __name__
+        logfile (string, optional): log file path. Defaults to config['log'].
+
+    Returns:
+        logging: set up logger
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+
+    # create file handler which logs even DEBUG messages
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
+    fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
+    fh.setFormatter(fh_formatter)
+
+    # create console handler with a INFO log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S')
+    ch.setFormatter(ch_formatter)
+
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+    return logger
+
+
 if __name__ == '__main__':
-    # ロギング設定
-    fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
-    logging.basicConfig(filename='log', encoding='utf-8', level=logging.DEBUG, format=fmt)
+    # logger設定
+    logger = setup_logger(__name__)
 
     # 物件情報ファイルを読み込む、無ければ作りLINE通知はしない
     line_notify = True
     if not os.path.exists(config['data']):
         line_notify = False
         with open(config['data'], 'w') as f:
-            logging.info('make file: ' + config['data'])
+            logger.info('make file: ' + config['data'])
             writer = csv.writer(f)
             writer.writerow(config['header'])
     df_old = pd.read_csv(config['data'])
-    logging.info('read property data.')
-    logging.info(len(df_old))
+    logger.info('read property data.')
+    logger.info(len(df_old))
 
     # 検索結果ページのHTMLからbodyを抽出
     result = requests.get(config["result_url"])
     soup = BeautifulSoup(result.content, 'html5lib')
     body = soup.find('body')
-    # logging.info(body)
+    # logger.info(body)
 
     # 検索結果のページ数を取得
     pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
     li = pagenation.find_all('li')[-1]
     page_num = int(li.find('a').text)
-    logging.info('get number of pages.')
-    logging.info(page_num)
+    logger.info('get number of pages.')
+    logger.info(page_num)
 
     # 1ページ目の物件データ収集
     propertyies = list()
     for property_unit in body.find_all('div', {'class': 'property_unit'}):
         propertyies.append(get_property_data(property_unit))
-    logging.info('get property information from p.1.')
-    logging.info(len(propertyies))
+    logger.info('get property information from p.1.')
+    logger.info(len(propertyies))
 
     # 2ページ名以降の各物件データ収集
     for i in range(2, page_num + 1):
@@ -105,8 +135,8 @@ if __name__ == '__main__':
         body = soup.find('body')
         for property_unit in body.find_all('div', {'class': 'property_unit'}):
             propertyies.append(get_property_data(property_unit))
-        logging.info('get property information from p.{}.'.format(i))
-        logging.info(len(propertyies))
+        logger.info('get property information from p.{}.'.format(i))
+        logger.info(len(propertyies))
 
     # 取得した物件情報をデータフレームに変換してCSVに出力
     df_new = pd.DataFrame(
@@ -114,8 +144,8 @@ if __name__ == '__main__':
         columns=config['header']
     )
     df_new.to_csv(config['data'], index=False)
-    logging.info('save property data to csv.')
-    logging.info(len(df_new))
+    logger.info('save property data to csv.')
+    logger.info(len(df_new))
 
     # 物件情報を確認して差分があればLINE通知
     if line_notify:
@@ -125,27 +155,27 @@ if __name__ == '__main__':
         # 追加物件
         added_properties = set(list_new) - set(list_old)
         if added_properties == set():
-            logging.info('NOT addedd from last time.')
+            logger.info('NOT addedd from last time.')
         else:
-            logging.info('addedd from last time.')
-            logging.info(added_properties)
+            logger.info('addedd from last time.')
+            logger.info(added_properties)
             message = ''
             for added_property in added_properties:
                 message += df_new.query('id == @added_property')['url'].values[0] + '\r\n'
             send_line_notify('次の物件が追加されました\r\n' + message)
-            logging.info('send LINE Notify.')
-            logging.info(message)
+            logger.info('send LINE Notify.')
+            logger.info(message)
 
         # 削除物件
         reduced_properties = set(list_old) - set(list_new)
         if reduced_properties == set():
-            logging.info('NOT reduced from last time.')
+            logger.info('NOT reduced from last time.')
         else:
-            logging.info('reduced from last time.')
-            logging.info(reduced_properties)
+            logger.info('reduced from last time.')
+            logger.info(reduced_properties)
             message = ''
             for reduced_property in reduced_properties:
                 message += str(df_old.query('id == @reduced_property').loc[:, ['name', 'price', 'location']].values[0]) + '\r\n'
             send_line_notify('次の物件が削除されました\r\n' + message)
-            logging.info('send LINE Notify.')
-            logging.info(message)
+            logger.info('send LINE Notify.')
+            logger.info(message)
