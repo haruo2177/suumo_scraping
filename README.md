@@ -11,7 +11,7 @@ Windows Pro 20H2, Python 3.9.1
 
 まぁそんな変なもの使ってないのであまりバージョンは気にせずで大丈夫かと
 
-## 使い方
+## 事前準備
 
 ### 設定ファイルをコピー
 ```shell
@@ -29,9 +29,15 @@ cp config.json.example config.json
 1. 「エリアから探す」で適当な地域とか条件とかで検索する
 1. 検索結果のURLをconfig.jsonの"result_url"に貼り付ける
 
-### python実行
+### パッケージインストール
 ```python
 pip install -r requirements.txt
+```
+
+これで事前準備は終了です。
+
+## python実行
+```python
 python get_property.py
 ```
 
@@ -40,4 +46,4 @@ property.csvが生成され、各物件の情報が記載されている。
 
 2回目以降のpython実行で、物件情報に差分があればLINEに通知される。
 
-掲載されなくなった物件はCSVからも削除されるので注意してください。
+※ 掲載されなくなった物件はCSVからも削除されるので注意してください。
