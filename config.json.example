@@ -1,7 +1,7 @@
 {
     "result_url": "<中古マンション購入の検索結果1ページ目のURL>",
     "log": "./log/LOGFILENAME.txt",
-    "data": "property.csv",
+    "data": "./data/property.csv",
     "header": [
         "id",
         "name",
