@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
+
+import logging
+import logging.handlers
+
 import os
 import csv
-import logging
 import pandas as pd
 
 import requests
@@ -75,7 +78,7 @@ def setup_logger(name, logfile=config['log']):
 
     # create file handler which logs even DEBUG messages
     os.makedirs(os.path.dirname(config['log']), exist_ok=True)
-    fh = logging.FileHandler(logfile)
+    fh = logging.handlers.RotatingFileHandler(logfile, maxBytes=100000, backupCount=10)
     fh.setLevel(logging.DEBUG)
     fh_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(name)s - %(funcName)s - %(message)s')
     fh.setFormatter(fh_formatter)
