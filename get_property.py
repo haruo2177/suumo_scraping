@@ -183,3 +183,20 @@ if __name__ == '__main__':
             send_line_notify('次の物件が削除されました\r\n' + message)
             logger.info('send LINE Notify.')
             logger.info(message)
+
+        # 価格変動
+        message_price = ''
+        for item_new in list_new:
+            name_and_price_new = df_new.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
+            item_old = df_old.query('id == @item_new')
+            if len(item_old) == 0:
+                print(item_old)
+                continue
+            name_and_price_old = df_old.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
+            if name_and_price_new[2] != name_and_price_old[2]:
+                message_price += name_and_price_new[0] + ' '
+                message_price += name_and_price_old[2] + ' => ' + name_and_price_new[2] + '\r\n'
+                message_price += name_and_price_new[1] + '\r\n'
+        send_line_notify('次の物件価格が変更されました\r\n' + message_price)
+        logger.info('send LINE Notify.')
+        logger.info(message_price)
