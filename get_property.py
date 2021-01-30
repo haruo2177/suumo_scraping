@@ -190,7 +190,6 @@ if __name__ == '__main__':
             name_and_price_new = df_new.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
             item_old = df_old.query('id == @item_new')
             if len(item_old) == 0:
-                print(item_old)
                 continue
             name_and_price_old = df_old.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
             if name_and_price_new[2] != name_and_price_old[2]:
