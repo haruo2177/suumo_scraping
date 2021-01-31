@@ -197,6 +197,9 @@ if __name__ == '__main__':
                 message_price += name_and_price_old[2] + ' => ' + name_and_price_new[2] + '\r\n'
                 message_price += name_and_price_new[1] + '\r\n'
         if message_price != '':
+            logger.info('fluctuated from last time.')
             send_line_notify('次の物件価格が変更されました\r\n' + message_price)
             logger.info('send LINE Notify.')
             logger.info(message_price)
+        else:
+            logger.info('NOT fluctuated from last time.')
