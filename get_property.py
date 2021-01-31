@@ -54,13 +54,13 @@ def get_property_data(property_unit):
     floor_plan = dottable_lines[3].find_all('dd')[1].text
     # バルコニー、築年月
     balcony = dottable_lines[4].find_all('dd')[0].text
-    data_of_construction = dottable_lines[4].find_all('dd')[1].text
+    date_of_construction = dottable_lines[4].find_all('dd')[1].text
     # 管理会社
     company = ''
     if property_unit.find('div', {'class': 'shopmore-title'}) is not None:
         company = property_unit.find('div', {'class': 'shopmore-title'}).text.strip()
 
-    return [property_id, name, url, price, location, station, area, floor_plan, balcony, data_of_construction, company]
+    return [property_id, name, url, price, location, station, area, floor_plan, balcony, date_of_construction, company]
 
 
 def setup_logger(name, logfile=config['log']):
