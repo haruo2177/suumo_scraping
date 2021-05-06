@@ -115,7 +115,7 @@ if __name__ == '__main__':
     result = requests.get(config["result_url"])
     soup = BeautifulSoup(result.content, 'html5lib')
     body = soup.find('body')
-    # logger.info(body)
+    logger.info('get body of specified page.')
 
     # 検索結果のページ数を取得
     pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
@@ -125,11 +125,12 @@ if __name__ == '__main__':
     logger.info(page_num)
 
     # 1ページ目の物件データ収集
-    propertyies = list()
+    # 1ページ目はURLにpnクエリが無いため
+    properties = list()
     for property_unit in body.find_all('div', {'class': 'property_unit'}):
-        propertyies.append(get_property_data(property_unit))
+        properties.append(get_property_data(property_unit))
     logger.info('get property information from p.1.')
-    logger.info(len(propertyies))
+    logger.info(len(properties))
 
     # 2ページ名以降の各物件データ収集
     for i in range(2, page_num + 1):
@@ -138,13 +139,13 @@ if __name__ == '__main__':
         soup = BeautifulSoup(result.content, 'html5lib')
         body = soup.find('body')
         for property_unit in body.find_all('div', {'class': 'property_unit'}):
-            propertyies.append(get_property_data(property_unit))
+            properties.append(get_property_data(property_unit))
         logger.info('get property information from p.{}.'.format(i))
-        logger.info(len(propertyies))
+        logger.info(len(properties))
 
     # 取得した物件情報をデータフレームに変換してCSVに出力
     df_new = pd.DataFrame(
-        data=propertyies,
+        data=properties,
         columns=config['header']
     )
     df_new.to_csv(config['data'], index=False)
@@ -159,9 +160,9 @@ if __name__ == '__main__':
         # 追加物件
         added_properties = set(list_new) - set(list_old)
         if added_properties == set():
-            logger.info('NOT addedd from last time.')
+            logger.info('NOT added from last time.')
         else:
-            logger.info('addedd from last time.')
+            logger.info('added from last time.')
             logger.info(added_properties)
             message = ''
             for added_property in added_properties:
