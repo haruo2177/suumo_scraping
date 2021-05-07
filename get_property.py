@@ -120,7 +120,7 @@ if __name__ == '__main__':
     # 検索結果のページ数を取得
     pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
     li = pagenation.find_all('li')[-1]
-    page_num = int(li.find('a').text)
+    page_num = int(li.find('a').text) if li.find('a') else 1
     logger.info('get number of pages.')
     logger.info(page_num)
 
