@@ -5,7 +5,6 @@ import logging
 import logging.handlers
 
 import os
-import csv
 import pandas as pd
 
 import requests
@@ -99,18 +98,6 @@ if __name__ == '__main__':
     # logger設定
     logger = setup_logger(__name__)
 
-    # 物件情報ファイルを読み込む、無ければ作りLINE通知はしない
-    line_notify = True
-    if not os.path.exists(config['data']):
-        line_notify = False
-        with open(config['data'], 'w') as f:
-            logger.info('make file: ' + config['data'])
-            writer = csv.writer(f)
-            writer.writerow(config['header'])
-    df_old = pd.read_csv(config['data'])
-    logger.info('read property data.')
-    logger.info(len(df_old))
-
     # 検索結果ページのHTMLからbodyを抽出
     result = requests.get(config["result_url"])
     soup = BeautifulSoup(result.content, 'html5lib')
@@ -121,18 +108,16 @@ if __name__ == '__main__':
     pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
     li = pagenation.find_all('li')[-1]
     page_num = int(li.find('a').text) if li.find('a') else 1
-    logger.info('get number of pages.')
-    logger.info(page_num)
+    logger.info(f'get number of pages, {page_num}.')
 
-    # 1ページ目の物件データ収集
+    # 検索結果1ページ目の物件データ収集
     # 1ページ目はURLにpnクエリが無いため
     properties = list()
     for property_unit in body.find_all('div', {'class': 'property_unit'}):
         properties.append(get_property_data(property_unit))
-    logger.info('get property information from p.1.')
-    logger.info(len(properties))
+    logger.info(f'get {len(properties)} properties information from p.1.')
 
-    # 2ページ名以降の各物件データ収集
+    # 2ページ目以降の各物件データ収集
     for i in range(2, page_num + 1):
         url = config["result_url"] + '&pn=' + str(i)
         result = requests.get(url)
@@ -140,20 +125,25 @@ if __name__ == '__main__':
         body = soup.find('body')
         for property_unit in body.find_all('div', {'class': 'property_unit'}):
             properties.append(get_property_data(property_unit))
-        logger.info('get property information from p.{}.'.format(i))
-        logger.info(len(properties))
+        logger.info(f'get {len(properties)} properties information from p.{i}.')
+
+    # LINE通知設定
+    is_line_notify = os.path.exists(config['data'])
+
+    # 更新前の物件情報ファイルを読み込む
+    if os.path.exists(f"{config['data']}"):
+        df_old = pd.read_csv(f"{config['data']}")
+    else:
+        df_old = pd.DataFrame(data=list(), columns=config['header'])
+    logger.info(f'read {len(df_old)} old-properties.')
 
     # 取得した物件情報をデータフレームに変換してCSVに出力
-    df_new = pd.DataFrame(
-        data=properties,
-        columns=config['header']
-    )
+    df_new = pd.DataFrame(data=properties, columns=config['header'])
     df_new.to_csv(config['data'], index=False)
-    logger.info('save property data to csv.')
-    logger.info(len(df_new))
+    logger.info(f'save {len(df_new)} new-properties to csv.')
 
     # 物件情報を確認して差分があればLINE通知
-    if line_notify:
+    if is_line_notify:
         list_old = df_old['id'].tolist()
         list_new = df_new['id'].tolist()
 
@@ -188,10 +178,10 @@ if __name__ == '__main__':
         # 価格変動
         message_price = ''
         for item_new in list_new:
-            name_and_price_new = df_new.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
             item_old = df_old.query('id == @item_new')
             if len(item_old) == 0:
                 continue
+            name_and_price_new = df_new.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
             name_and_price_old = df_old.query('id == @item_new').loc[:, ['name', 'url', 'price']].values[0]
             if name_and_price_new[2] != name_and_price_old[2]:
                 message_price += name_and_price_new[0] + ' '
