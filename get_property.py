@@ -105,8 +105,8 @@ if __name__ == '__main__':
     logger.info('get body of specified page.')
 
     # 検索結果のページ数を取得
-    pagenation = body.find('div', {'class': 'pagination pagination_set-nav'})
-    li = pagenation.find_all('li')[-1]
+    pagination = body.find('div', {'class': 'pagination pagination_set-nav'})
+    li = pagination.find_all('li')[-1]
     page_num = int(li.find('a').text) if li.find('a') else 1
     logger.info(f'get number of pages, {page_num}.')
 
@@ -131,8 +131,8 @@ if __name__ == '__main__':
     is_line_notify = os.path.exists(config['data'])
 
     # 更新前の物件情報ファイルを読み込む
-    if os.path.exists(f"{config['data']}"):
-        df_old = pd.read_csv(f"{config['data']}")
+    if os.path.exists(config['data']):
+        df_old = pd.read_csv(config['data'])
     else:
         df_old = pd.DataFrame(data=list(), columns=config['header'])
     logger.info(f'read {len(df_old)} old-properties.')
